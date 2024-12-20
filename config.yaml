@@ -7,7 +7,7 @@ config:
   - false
   - false
   - false
-  start_record_button: !Contains
+  start_record: !Contains
   - key: Return
     controller_btn: null
     ctrl: false
@@ -20,7 +20,7 @@ config:
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
-  stop_record_button: !Contains
+  stop_record: !Contains
   - key: Escape
     controller_btn: null
     ctrl: false
@@ -33,7 +33,7 @@ config:
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
-  start_playback_button: !Contains
+  start_playback: !Contains
   - key: Return
     controller_btn: null
     ctrl: true
@@ -46,7 +46,7 @@ config:
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
-  stop_playback_button: !Contains
+  stop_playback: !Contains
   - key: Escape
     controller_btn: null
     ctrl: false
@@ -59,7 +59,19 @@ config:
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
-  continue_record_button: !Exclude
+  continue_record: !Exclude
+  - key: null
+    controller_btn: null
+    ctrl: null
+    alt: null
+    shift: null
+    tab: null
+    windows: null
+    mouse_l_button: null
+    mouse_r_button: null
+    mouse_m_button: null
+    trigger_l: null
+    trigger_r: null
   - key: Escape
     controller_btn: null
     ctrl: false
@@ -72,7 +84,7 @@ config:
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
-  drop_record_button: !Contains
+  drop_record: !Contains
   - key: Escape
     controller_btn: null
     ctrl: false
@@ -82,6 +94,19 @@ config:
     windows: false
     mouse_l_button: null
     mouse_r_button: null
+    mouse_m_button: null
+    trigger_l: null
+    trigger_r: null
+  save_records: !Contains
+  - key: KeyS
+    controller_btn: null
+    ctrl: true
+    alt: false
+    shift: true
+    tab: false
+    windows: false
+    mouse_l_button: null
+    mouse_r_button: true
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
@@ -104,21 +129,22 @@ init_state:
       - 0.0
     - - 0.0
       - 0.0
-    sticks:
+    left_stick:
     - - 0.0
-      - 0.0
-      - 0.0
-      - 0.0
-    - - 0.0
-      - 0.0
-      - 0.0
       - 0.0
     - - 0.0
       - 0.0
-      - 0.0
+    - - 0.0
       - 0.0
     - - 0.0
       - 0.0
+    right_stick:
+    - - 0.0
       - 0.0
+    - - 0.0
+      - 0.0
+    - - 0.0
+      - 0.0
+    - - 0.0
       - 0.0
 records: []

@@ -4,6 +4,8 @@ use std::{
     fmt::Debug,
 };
 
+use crate::recorder::RecordEntry;
+
 // struct InputState {
 //     time_ms: f64,
 //     mouse: MouseState,
@@ -26,33 +28,185 @@ use std::{
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct GlobalState {
-    time_ms: f64,
-    pressed_keys: Vec<AnyKey>,
-    offsets: AllOffsets,
+    pub time_ms: f64,
+    pub pressed_keys: Vec<AnyKey>,
+    pub offsets: AllOffsets,
+
+    #[serde(skip)]
+    rec_pressed: Vec<AnyKey>,
+    #[serde(skip)]
+    rec_released: Vec<AnyKey>,
+    #[serde(skip)]
+    rec_moves: Vec<AnyOffset>,
+}
+
+impl From<rdev::Key> for AnyKey {
+    fn from(key: rdev::Key) -> Self {
+        AnyKey::Keyboard(Key(key))
+    }
+}
+impl From<rdev::Button> for AnyKey {
+    fn from(button: rdev::Button) -> Self {
+        match button {
+            rdev::Button::Left => AnyKey::MouseButton(0),
+            rdev::Button::Right => AnyKey::MouseButton(1),
+            rdev::Button::Middle => AnyKey::MouseButton(2),
+            rdev::Button::Unknown(i) => AnyKey::MouseButton(i as u32),
+        }
+    }
+}
+// From controller
+impl From<(u32, usize)> for AnyKey {
+    fn from(button: (u32, usize)) -> Self {
+        AnyKey::Controller(button.0, button.1)
+    }
+}
+
+impl GlobalState {
+    pub fn key_down(&mut self, key: AnyKey) {
+        self.rec_pressed.push(key.clone());
+        if !self.pressed_keys.contains(&key) {
+            self.pressed_keys.push(key);
+        }
+    }
+    pub fn key_up(&mut self, key: AnyKey) {
+        self.pressed_keys.retain(|k| k != &key);
+        self.rec_released.push(key);
+    }
+    pub fn moves(&mut self, offset: AnyOffset) {
+        match offset {
+            AnyOffset::Mouse(x, y) => self.offsets.mouse = (x, y),
+            AnyOffset::Wheel(x, y) => self.offsets.wheel = (x, y),
+            AnyOffset::Trigger(i, x, y) => self.offsets.trigger[i as usize] = (x, y),
+            AnyOffset::LeftStick(i, x, y) => self.offsets.left_stick[i as usize] = (x, y),
+            AnyOffset::RightStick(i, x, y) => self.offsets.right_stick[i as usize] = (x, y),
+        }
+        self.rec_moves.push(offset);
+    }
+
+    pub fn next_ms(&mut self, ms: f64) -> RecordEntry {
+        let pressed = std::mem::replace(&mut self.rec_pressed, Vec::new());
+        let released = std::mem::replace(&mut self.rec_released, Vec::new());
+        let moves = std::mem::replace(&mut self.rec_moves, Vec::new());
+        let res = RecordEntry {
+            ms,
+            pressed,
+            released,
+            moves,
+        };
+        self.time_ms = ms;
+        res
+    }
+
+    pub fn get_pattern(&self) -> ShortCut {
+        let mut res = ShortCut::NONE;
+        for key in &self.pressed_keys {
+            match key {
+                AnyKey::Keyboard(Key(k)) => match k {
+                    rdev::Key::ControlLeft | rdev::Key::ControlRight => res.ctrl = Some(true),
+                    rdev::Key::Alt | rdev::Key::AltGr => res.alt = Some(true),
+                    rdev::Key::ShiftLeft | rdev::Key::ShiftRight => res.shift = Some(true),
+                    rdev::Key::Tab => res.tab = Some(true),
+                    rdev::Key::MetaLeft | rdev::Key::MetaRight => res.windows = Some(true),
+                    _ => (),
+                },
+                AnyKey::MouseButton(i) => match i {
+                    0 => res.mouse_l_button = Some(true),
+                    1 => res.mouse_r_button = Some(true),
+                    2 => res.mouse_m_button = Some(true),
+                    _ => (),
+                },
+                _ => (),
+            }
+        }
+        res
+    }
+
+    pub fn match_shortcut(&self, pat: &ShortCut, shortcut: &ShortCut) -> bool {
+        // compare mods
+        fn cmp(t: &Option<bool>, s: &Option<bool>) -> bool {
+            s.is_none() || t.is_some() == s.unwrap()
+        }
+        let modifiers = cmp(&pat.alt, &shortcut.alt)
+            && cmp(&pat.shift, &shortcut.shift)
+            && cmp(&pat.tab, &shortcut.tab)
+            && cmp(&pat.windows, &shortcut.windows)
+            && cmp(&pat.mouse_l_button, &shortcut.mouse_l_button)
+            && cmp(&pat.mouse_r_button, &shortcut.mouse_r_button)
+            && cmp(&pat.mouse_m_button, &shortcut.mouse_m_button);
+        if !modifiers {
+            return false;
+        }
+        // compare triggers
+        if let Some(i) = shortcut.trigger_l {
+            if self.offsets.trigger[i as usize].0 == 0.0 {
+                return false;
+            }
+        }
+        if let Some(i) = shortcut.trigger_r {
+            if self.offsets.trigger[i as usize].1 == 0.0 {
+                return false;
+            }
+        }
+        // compare key
+        if let Some(k) = &shortcut.key {
+            if !self.pressed_keys.contains(&AnyKey::Keyboard(k.clone())) {
+                return false;
+            }
+        }
+        // compare controller button
+        if let Some((id, index)) = shortcut.controller_btn {
+            if !self.pressed_keys.contains(&AnyKey::Controller(id, index)) {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn match_shortcuts(&self, pat: &ShortCut, shortcuts: &ShortCuts) -> bool {
+        match shortcuts {
+            ShortCuts::Contains(vec) => {
+                for shortcut in vec {
+                    if self.match_shortcut(pat, shortcut) {
+                        return true;
+                    }
+                }
+                false
+            }
+            ShortCuts::Exclude(vec) => {
+                for shortcut in vec {
+                    if self.match_shortcut(pat, shortcut) {
+                        return false;
+                    }
+                }
+                true
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 // struct Key(u32);
-struct Key(rdev::Key);
+pub struct Key(rdev::Key);
 
 #[derive(Serialize, Deserialize, PartialEq)]
 pub struct ShortCut {
     /// The key that triggers the shortcut.
-    key: Option<Key>,
+    pub key: Option<Key>,
     /// The controller button that triggers the shortcut. (id, button)
-    controller_btn: Option<(u32, u32)>,
+    pub controller_btn: Option<(u32, usize)>,
     // The following modifiers are optional because they are not always needed.
-    ctrl: Option<bool>,
-    alt: Option<bool>,
-    shift: Option<bool>,
-    tab: Option<bool>,
-    windows: Option<bool>,
-    mouse_l_button: Option<bool>,
-    mouse_r_button: Option<bool>,
-    mouse_m_button: Option<bool>,
+    pub ctrl: Option<bool>,
+    pub alt: Option<bool>,
+    pub shift: Option<bool>,
+    pub tab: Option<bool>,
+    pub windows: Option<bool>,
+    pub mouse_l_button: Option<bool>,
+    pub mouse_r_button: Option<bool>,
+    pub mouse_m_button: Option<bool>,
     // trigger on the stick of the id'th controller
-    trigger_l: Option<u32>,
-    trigger_r: Option<u32>,
+    pub trigger_l: Option<u32>,
+    pub trigger_r: Option<u32>,
 }
 
 /// A list of shortcuts that can be used to trigger an action.
@@ -114,6 +268,35 @@ impl ShortCut {
         shift: Some(false),
         tab: Some(false),
         windows: Some(false),
+        mouse_l_button: None,
+        mouse_r_button: None,
+        mouse_m_button: None,
+        trigger_l: None,
+        trigger_r: None,
+    };
+    pub const CTRL_RIGHT_S: Self = Self {
+        key: Some(Key(rdev::Key::KeyS)),
+        controller_btn: None,
+        ctrl: Some(true),
+        alt: Some(false),
+        shift: Some(true),
+        tab: Some(false),
+        windows: Some(false),
+        mouse_l_button: None,
+        mouse_r_button: Some(true),
+        mouse_m_button: None,
+        trigger_l: None,
+        trigger_r: None,
+    };
+
+    pub const NONE: Self = Self {
+        key: None,
+        controller_btn: None,
+        ctrl: None,
+        alt: None,
+        shift: None,
+        tab: None,
+        windows: None,
         mouse_l_button: None,
         mouse_r_button: None,
         mouse_m_button: None,
@@ -215,7 +398,8 @@ pub struct AllOffsets {
     pub mouse: (f64, f64),
     pub wheel: (f64, f64),
     pub trigger: [(f64, f64); 4],
-    pub sticks: [(f64, f64, f64, f64); 4],
+    pub left_stick: [(f64, f64); 4],
+    pub right_stick: [(f64, f64); 4],
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -223,7 +407,8 @@ pub enum ControllerEvent {
     ButtonPress(usize),
     ButtonRelease(usize),
     TriggerMove(f64, f64),
-    SticksMove(f64, f64, f64, f64),
+    LSticksMove(f64, f64),
+    RSticksMove(f64, f64),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
@@ -242,22 +427,12 @@ impl ControllerRaw {
     pub fn sl_change(&mut self, l_x: i16, l_y: i16) -> ControllerEvent {
         self.sticker.0 = l_x;
         self.sticker.1 = l_y;
-        ControllerEvent::SticksMove(
-            l_x as f64 / i16::MAX as f64,
-            l_y as f64 / i16::MAX as f64,
-            self.sticker.2 as f64 / i16::MAX as f64,
-            self.sticker.3 as f64 / i16::MAX as f64,
-        )
+        ControllerEvent::LSticksMove(l_x as f64 / i16::MAX as f64, l_y as f64 / i16::MAX as f64)
     }
     pub fn sr_change(&mut self, r_x: i16, r_y: i16) -> ControllerEvent {
         self.sticker.2 = r_x;
         self.sticker.3 = r_y;
-        ControllerEvent::SticksMove(
-            self.sticker.0 as f64 / i16::MAX as f64,
-            self.sticker.1 as f64 / i16::MAX as f64,
-            r_x as f64 / i16::MAX as f64,
-            r_y as f64 / i16::MAX as f64,
-        )
+        ControllerEvent::RSticksMove(r_x as f64 / i16::MAX as f64, r_y as f64 / i16::MAX as f64)
     }
     pub fn btn_change(&mut self, mut btn: u16) -> Vec<ControllerEvent> {
         let mut old = self.button;

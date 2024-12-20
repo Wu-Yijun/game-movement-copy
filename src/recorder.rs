@@ -14,12 +14,14 @@ pub struct Config {
     pub enable_keyboard: bool,
     pub enable_controller: [bool; 4],
 
-    pub start_record_button: ShortCuts,
-    pub stop_record_button: ShortCuts,
-    pub start_playback_button: ShortCuts,
-    pub stop_playback_button: ShortCuts,
-    pub continue_record_button: ShortCuts,
-    pub drop_record_button: ShortCuts,
+    pub start_record: ShortCuts,
+    pub stop_record: ShortCuts,
+    pub start_playback: ShortCuts,
+    pub stop_playback: ShortCuts,
+    pub continue_record: ShortCuts,
+    pub drop_record: ShortCuts,
+
+    pub save_records: ShortCuts,
 }
 
 impl Default for Config {
@@ -30,12 +32,13 @@ impl Default for Config {
             enable_keyboard: true,
             enable_controller: [true, false, false, false],
 
-            start_record_button: ShortCuts::Contains(vec![]),
-            stop_record_button: ShortCuts::Contains(vec![]),
-            start_playback_button: ShortCuts::Contains(vec![]),
-            stop_playback_button: ShortCuts::Contains(vec![]),
-            continue_record_button: ShortCuts::Contains(vec![]),
-            drop_record_button: ShortCuts::Contains(vec![]),
+            start_record: ShortCuts::Contains(vec![]),
+            stop_record: ShortCuts::Contains(vec![]),
+            start_playback: ShortCuts::Contains(vec![]),
+            stop_playback: ShortCuts::Contains(vec![]),
+            continue_record: ShortCuts::Contains(vec![]),
+            drop_record: ShortCuts::Contains(vec![]),
+            save_records: ShortCuts::Contains(vec![]),
         }
     }
 }
@@ -51,12 +54,14 @@ impl Config {
     /// - `Shift + Escape` to drop the current recording, and to remain the last recording unchanged
     pub fn new() -> Self {
         Self {
-            start_record_button: ShortCuts::Contains(vec![ShortCut::SHIFT_ENTER]),
-            stop_record_button: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
-            drop_record_button: ShortCuts::Contains(vec![ShortCut::SHIFT_ESCAPE]),
-            start_playback_button: ShortCuts::Contains(vec![ShortCut::CTRL_ENTER]),
-            stop_playback_button: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
-            continue_record_button: ShortCuts::Exclude(vec![ShortCut::ESCAPE]),
+            start_record: ShortCuts::Contains(vec![ShortCut::SHIFT_ENTER]),
+            stop_record: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
+            drop_record: ShortCuts::Contains(vec![ShortCut::SHIFT_ESCAPE]),
+            start_playback: ShortCuts::Contains(vec![ShortCut::CTRL_ENTER]),
+            stop_playback: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
+            continue_record: ShortCuts::Exclude(vec![ShortCut::NONE, ShortCut::ESCAPE]),
+
+            save_records: ShortCuts::Contains(vec![ShortCut::CTRL_RIGHT_S]),
             ..Default::default()
         }
     }
@@ -68,8 +73,15 @@ enum CallbackType {
     /// Controller
     Ctrl(f64, u32, ControllerEvent),
 }
-// type MkCallbackType = (f64, rdev::EventType, String);
-// type CtCallbackType = (f64, u32, ControllerEvent);
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
+pub enum RecorderState {
+    #[default]
+    Ready,
+    Recording,
+    Playing,
+    Error,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Recorder {
@@ -85,6 +97,9 @@ pub struct Recorder {
     controller_thread: Option<JoinHandle<()>>,
     #[serde(skip)]
     recv: Option<Receiver<CallbackType>>,
+
+    #[serde(skip)]
+    pub state: RecorderState,
 }
 impl Default for Recorder {
     fn default() -> Self {
@@ -96,6 +111,7 @@ impl Default for Recorder {
             rdev_thread: None,
             controller_thread: None,
             recv: None,
+            state: RecorderState::Error,
         }
     }
 }
@@ -119,11 +135,14 @@ impl Recorder {
         )
     }
     pub fn save_to_file(&self, path: String) {
+        println!("Save to file!");
         let s = serde_yml::to_string(&self).unwrap();
         std::fs::write(path, s).unwrap();
     }
 
     pub fn init(&mut self) {
+        self.state = RecorderState::Ready;
+
         // 创建一个用于发送的通道
         let (tx, rx) = std::sync::mpsc::channel::<CallbackType>();
         // 传递给闭包的起始时间点
@@ -225,23 +244,134 @@ impl Recorder {
         match r.recv() {
             Ok(CallbackType::MK(ms, ev, s)) => {
                 println!("MK:ms={:.2}\t{:?}", ms, ev);
+                if ms > self.current.time_ms + 1.0 {
+                    self.next_ms(ms);
+                }
+                match ev {
+                    rdev::EventType::KeyPress(key) => self.current.key_down(key.into()),
+                    rdev::EventType::KeyRelease(key) => self.current.key_up(key.into()),
+                    rdev::EventType::ButtonPress(button) => self.current.key_down(button.into()),
+                    rdev::EventType::ButtonRelease(button) => self.current.key_up(button.into()),
+                    rdev::EventType::MouseMove { x, y } => {
+                        self.current.moves(AnyOffset::Mouse(x, y))
+                    }
+                    rdev::EventType::Wheel {
+                        delta_x: x,
+                        delta_y: y,
+                    } => self.current.moves(AnyOffset::Wheel(x as f64, y as f64)),
+                }
             }
             Ok(CallbackType::Ctrl(ms, id, ev)) => {
                 println!("C{id}:ms={:.2}\t{:?}", ms, ev);
+                if ms > self.current.time_ms + 1.0 {
+                    self.next_ms(ms);
+                }
+                match ev {
+                    ControllerEvent::ButtonPress(index) => {
+                        self.current.key_down((id, index).into())
+                    }
+                    ControllerEvent::ButtonRelease(index) => {
+                        self.current.key_up((id, index).into())
+                    }
+                    ControllerEvent::TriggerMove(x, y) => {
+                        self.current.moves(AnyOffset::Trigger(id, x, y))
+                    }
+                    ControllerEvent::LSticksMove(x, y) => {
+                        self.current.moves(AnyOffset::LeftStick(id, x, y))
+                    }
+                    ControllerEvent::RSticksMove(x, y) => {
+                        self.current.moves(AnyOffset::RightStick(id, x, y))
+                    }
+                }
             }
             Err(e) => panic!("Receiver Error! {e}"),
         }
     }
 
-    // fn write_mouse_key(&self, )
+    pub fn is_ok(&self) -> bool {
+        self.state != RecorderState::Error
+    }
+
+    fn next_ms(&mut self, ms: f64) {
+        let e = self.current.next_ms(ms);
+        self.records.push(e);
+    }
+
+    pub fn test_shortcuts(&mut self) -> RecorderState {
+        let pat = self.current.get_pattern();
+        if self
+            .current
+            .match_shortcuts(&pat, &self.config.save_records)
+        {
+            self.save_to_file("config.yaml".to_string());
+        }
+        match self.state {
+            RecorderState::Ready => {
+                if self
+                    .current
+                    .match_shortcuts(&pat, &self.config.start_record)
+                {
+                    self.start_record(false)
+                } else if self
+                    .current
+                    .match_shortcuts(&pat, &self.config.start_playback)
+                {
+                    self.start_playback()
+                }
+            }
+            RecorderState::Recording => {
+                if self.current.match_shortcuts(&pat, &self.config.drop_record) {
+                    self.stop_record(false)
+                } else if self.current.match_shortcuts(&pat, &self.config.stop_record) {
+                    self.stop_record(true)
+                }
+            }
+            RecorderState::Playing => {
+                if self
+                    .current
+                    .match_shortcuts(&pat, &self.config.continue_record)
+                {
+                    self.stop_playback();
+                    self.start_record(true)
+                } else if self
+                    .current
+                    .match_shortcuts(&pat, &self.config.stop_playback)
+                {
+                    self.stop_playback();
+                }
+            }
+            RecorderState::Error => (),
+        }
+        // self.current.match_shortcut(pat, shortcut)
+        self.state.clone()
+    }
+}
+
+impl Recorder {
+    fn start_record(&mut self, continue_at_playback: bool) {
+        println!("Start Recording!!! Continued:{}", continue_at_playback);
+        self.state = RecorderState::Recording;
+    }
+    fn stop_record(&mut self, discard_records: bool) {
+        println!("Stop Recording!!! Discard:{}", discard_records);
+        self.state = RecorderState::Ready;
+    }
+    fn start_playback(&mut self) {
+        println!("Start Playback!!!");
+        self.state = RecorderState::Playing;
+    }
+    fn stop_playback(&mut self) {
+        println!("Stop Playback!!!");
+        self.state = RecorderState::Ready;
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct RecordEntry {
-    ms: f64,
-    pressed: Vec<AnyKey>,
-    released: Vec<AnyKey>,
-    moves: Vec<AnyOffset>,
+pub struct RecordEntry {
+    pub ms: f64,
+    pub pressed: Vec<AnyKey>,
+    pub released: Vec<AnyKey>,
+    pub moves: Vec<AnyOffset>,
 }
 
 #[test]

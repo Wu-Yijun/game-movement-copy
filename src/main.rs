@@ -54,8 +54,10 @@ fn run_vigem() {
 #[cfg(windows)]
 fn main() {
     let mut record = Recorder::from_file("config.yaml".to_string());
+    record.save_to_file("config.yaml".to_string());
     record.init();
-    loop {
+    while record.is_ok() {
         record.listen();
+        record.test_shortcuts();
     }
 }
