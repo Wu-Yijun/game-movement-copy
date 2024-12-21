@@ -53,11 +53,18 @@ fn run_vigem() {
 
 #[cfg(windows)]
 fn main() {
+    // env_logger::init();
+    // log::warn!("This info message will always be shown"); 
+    // return;
     let mut record = Recorder::from_file("config.yaml".to_string());
+    println!("{:#?}", record);
     record.save_to_file("config.yaml".to_string());
     record.init();
     while record.is_ok() {
         record.listen();
-        record.test_shortcuts();
+        record.match_shortcuts();
     }
 }
+
+
+

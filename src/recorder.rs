@@ -1,5 +1,7 @@
 use std::{sync::mpsc::Receiver, thread::JoinHandle};
 
+use log::debug;
+
 use crate::state::{
     AnyKey, AnyOffset, ControllerEvent, ControllerRaw, GlobalState, ShortCut, ShortCuts,
 };
@@ -59,7 +61,7 @@ impl Config {
             drop_record: ShortCuts::Contains(vec![ShortCut::SHIFT_ESCAPE]),
             start_playback: ShortCuts::Contains(vec![ShortCut::CTRL_ENTER]),
             stop_playback: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
-            continue_record: ShortCuts::Exclude(vec![ShortCut::NONE, ShortCut::ESCAPE]),
+            continue_record: ShortCuts::Exclude(vec![ShortCut::EMPTY, ShortCut::ESCAPE]),
 
             save_records: ShortCuts::Contains(vec![ShortCut::CTRL_RIGHT_S]),
             ..Default::default()
@@ -297,8 +299,10 @@ impl Recorder {
         self.records.push(e);
     }
 
-    pub fn test_shortcuts(&mut self) -> RecorderState {
+    pub fn match_shortcuts(&mut self) -> RecorderState {
         let pat = self.current.get_pattern();
+        debug!("Pattern: {:?}", pat);
+        debug!("Pressed: {:?}", self.current.pressed_keys);
         if self
             .current
             .match_shortcuts(&pat, &self.config.save_records)
@@ -321,9 +325,9 @@ impl Recorder {
             }
             RecorderState::Recording => {
                 if self.current.match_shortcuts(&pat, &self.config.drop_record) {
-                    self.stop_record(false)
-                } else if self.current.match_shortcuts(&pat, &self.config.stop_record) {
                     self.stop_record(true)
+                } else if self.current.match_shortcuts(&pat, &self.config.stop_record) {
+                    self.stop_record(false)
                 }
             }
             RecorderState::Playing => {
@@ -388,4 +392,22 @@ fn test_recorder() {
     loop {
         record.listen();
     }
+}
+
+#[test]
+fn test_shortcuts() {
+    env_logger::builder()
+        .target(env_logger::Target::Stdout)
+        .filter_level(log::LevelFilter::Trace)
+        .is_test(true)
+        .init();
+    let mut record = Recorder::from_file("".to_string());
+    // record.state = RecorderState::Ready;
+    // record.current.pressed_keys.push(rdev::Key::Return.into());
+    // record.match_shortcuts();
+    record.state = RecorderState::Playing;
+    record.current.pressed_keys.push(rdev::Key::UpArrow.into());
+    record.match_shortcuts();
+
+    // panic!()
 }

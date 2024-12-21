@@ -1,3 +1,4 @@
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -98,8 +99,14 @@ impl GlobalState {
         res
     }
 
+    /// get modifiers pattern of current state.
+    ///
+    /// - The Short::key_option field will be the num of key pressed.
+    /// - The Short::key field will be the last key pressed.
+    /// - The Short::controller_btn_option field will be the num of controller button pressed.
+    /// - The Short::controller_btn field will be the last controller button pressed.
     pub fn get_pattern(&self) -> ShortCut {
-        let mut res = ShortCut::NONE;
+        let mut res = ShortCut::ANY;
         for key in &self.pressed_keys {
             match key {
                 AnyKey::Keyboard(Key(k)) => match k {
@@ -108,7 +115,10 @@ impl GlobalState {
                     rdev::Key::ShiftLeft | rdev::Key::ShiftRight => res.shift = Some(true),
                     rdev::Key::Tab => res.tab = Some(true),
                     rdev::Key::MetaLeft | rdev::Key::MetaRight => res.windows = Some(true),
-                    _ => (),
+                    k => {
+                        res.key.replace(Key(k.clone()));
+                        res.key_option += 1;
+                    }
                 },
                 AnyKey::MouseButton(i) => match i {
                     0 => res.mouse_l_button = Some(true),
@@ -116,7 +126,10 @@ impl GlobalState {
                     2 => res.mouse_m_button = Some(true),
                     _ => (),
                 },
-                _ => (),
+                AnyKey::Controller(id, code) => {
+                    res.controller_btn_option += 1;
+                    res.controller_btn = Some((*id, *code));
+                }
             }
         }
         res
@@ -128,6 +141,7 @@ impl GlobalState {
             s.is_none() || t.is_some() == s.unwrap()
         }
         let modifiers = cmp(&pat.alt, &shortcut.alt)
+            && cmp(&pat.ctrl, &shortcut.ctrl)
             && cmp(&pat.shift, &shortcut.shift)
             && cmp(&pat.tab, &shortcut.tab)
             && cmp(&pat.windows, &shortcut.windows)
@@ -148,17 +162,73 @@ impl GlobalState {
                 return false;
             }
         }
-        // compare key
-        if let Some(k) = &shortcut.key {
-            if !self.pressed_keys.contains(&AnyKey::Keyboard(k.clone())) {
+        match (shortcut.key_option, &shortcut.key) {
+            // skip
+            (0, None) => (),
+            // should press any key
+            (1, None) if pat.key_option == 0 => return false,
+            // should not press any key
+            (2, None) if pat.key_option != 0 => return false,
+            // Should press this key
+            (0, Some(key)) => 'match_case: {
+                for k in &self.pressed_keys {
+                    if let AnyKey::Keyboard(k) = k {
+                        if k == key {
+                            break 'match_case;
+                        }
+                    }
+                }
                 return false;
             }
+            // Should only press this key, no others
+            (1, Some(key)) if pat.key_option != 1 || pat.key.as_ref() != Some(key) => return false,
+            // Should not press this key
+            (2, Some(key)) => {
+                for k in &self.pressed_keys {
+                    if let AnyKey::Keyboard(k) = k {
+                        if k == key {
+                            return false;
+                        }
+                    }
+                }
+            }
+            _ => (),
         }
-        // compare controller button
-        if let Some((id, index)) = shortcut.controller_btn {
-            if !self.pressed_keys.contains(&AnyKey::Controller(id, index)) {
+        match (shortcut.controller_btn_option, &shortcut.controller_btn) {
+            // skip
+            (0, None) => (),
+            // should press any key
+            (1, None) if pat.controller_btn_option == 0 => return false,
+            // should not press any key
+            (2, None) if pat.controller_btn_option != 0 => return false,
+            // Should press this key
+            (0, Some((kid, ki))) => 'match_case: {
+                for k in &self.pressed_keys {
+                    if let AnyKey::Controller(id, i) = k {
+                        if i == ki && id == kid {
+                            break 'match_case;
+                        }
+                    }
+                }
                 return false;
             }
+            // Should only press this key, no others
+            (1, Some(key)) => {
+                if pat.controller_btn_option != 1 || pat.controller_btn.as_ref() != Some(key) {
+                    return false;
+                }
+            }
+            // Should not press this key
+            (2, Some((kid, ki))) => {
+                for k in &self.pressed_keys {
+                    if let AnyKey::Controller(id, i) = k {
+                        if i == ki && id == kid {
+                            return false;
+                        }
+                    }
+                }
+            }
+            _ => (),
         }
         true
     }
@@ -168,17 +238,21 @@ impl GlobalState {
             ShortCuts::Contains(vec) => {
                 for shortcut in vec {
                     if self.match_shortcut(pat, shortcut) {
+                        debug!("Match {:?} found matched: {:?}", shortcuts, shortcut);
                         return true;
                     }
                 }
+                debug!("Match {:?} not find any.", shortcuts);
                 false
             }
             ShortCuts::Exclude(vec) => {
                 for shortcut in vec {
                     if self.match_shortcut(pat, shortcut) {
+                        debug!("Match {:?} with matched: {:?}", shortcuts, shortcut);
                         return false;
                     }
                 }
+                debug!("Match {:?} not find.", shortcuts);
                 true
             }
         }
@@ -191,8 +265,20 @@ pub struct Key(rdev::Key);
 
 #[derive(Serialize, Deserialize, PartialEq)]
 pub struct ShortCut {
+    /// Together with key to decide the behavior
+    ///
+    /// | key_option |            None           |               key                |
+    /// | :--------: | :-----------------------: | :------------------------------: |
+    /// |   0        | Not detect keyboard input | Should press this key            |
+    /// |   1        | Should press any key      | Should press this key, no others |
+    /// |   2        | Should not press any key  | Should not press this key        |
+    pub key_option: u8,
     /// The key that triggers the shortcut.
     pub key: Option<Key>,
+    /// Together with controller_btn to decide the behavior
+    ///
+    /// Similar mechanism to `use_key`
+    pub controller_btn_option: u8,
     /// The controller button that triggers the shortcut. (id, button)
     pub controller_btn: Option<(u32, usize)>,
     // The following modifiers are optional because they are not always needed.
@@ -219,6 +305,8 @@ pub enum ShortCuts {
 
 impl ShortCut {
     pub const SHIFT_ENTER: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
         key: Some(Key(rdev::Key::Return)),
         controller_btn: None,
         ctrl: Some(false),
@@ -233,6 +321,8 @@ impl ShortCut {
         trigger_r: None,
     };
     pub const ESCAPE: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
         key: Some(Key(rdev::Key::Escape)),
         controller_btn: None,
         ctrl: Some(false),
@@ -247,6 +337,8 @@ impl ShortCut {
         trigger_r: None,
     };
     pub const SHIFT_ESCAPE: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
         key: Some(Key(rdev::Key::Escape)),
         controller_btn: None,
         ctrl: Some(false),
@@ -261,6 +353,8 @@ impl ShortCut {
         trigger_r: None,
     };
     pub const CTRL_ENTER: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
         key: Some(Key(rdev::Key::Return)),
         controller_btn: None,
         ctrl: Some(true),
@@ -275,6 +369,8 @@ impl ShortCut {
         trigger_r: None,
     };
     pub const CTRL_RIGHT_S: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
         key: Some(Key(rdev::Key::KeyS)),
         controller_btn: None,
         ctrl: Some(true),
@@ -289,7 +385,10 @@ impl ShortCut {
         trigger_r: None,
     };
 
-    pub const NONE: Self = Self {
+    /// Any key is matched
+    pub const ANY: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
         key: None,
         controller_btn: None,
         ctrl: None,
@@ -300,6 +399,40 @@ impl ShortCut {
         mouse_l_button: None,
         mouse_r_button: None,
         mouse_m_button: None,
+        trigger_l: None,
+        trigger_r: None,
+    };
+    /// Any key should not pressed
+    pub const NONE: Self = Self {
+        key_option: 2,
+        controller_btn_option: 2,
+        key: None,
+        controller_btn: None,
+        ctrl: Some(false),
+        alt: Some(false),
+        shift: Some(false),
+        tab: Some(false),
+        windows: Some(false),
+        mouse_l_button: Some(false),
+        mouse_r_button: Some(false),
+        mouse_m_button: Some(false),
+        trigger_l: None,
+        trigger_r: None,
+    };
+    /// Any key should not pressed, except modifiers
+    pub const EMPTY: Self = Self {
+        key_option: 2,
+        controller_btn_option: 2,
+        key: None,
+        controller_btn: None,
+        ctrl: None,
+        alt: None,
+        shift: None,
+        tab: None,
+        windows: None,
+        mouse_l_button: Some(false),
+        mouse_r_button: Some(false),
+        mouse_m_button: Some(false),
         trigger_l: None,
         trigger_r: None,
     };
@@ -355,13 +488,23 @@ impl Debug for ShortCut {
             Some(v) => write!(f, "TriggerR({}) + ", v)?,
             None => (),
         }
-        match self.key {
-            Some(Key(v)) => write!(f, " {:?}", v)?,
-            None => (),
+        match (self.key_option, &self.key) {
+            (0, None) => write!(f, "SkipKey")?,
+            (1, None) => write!(f, "AnyKey")?,
+            (2, None) => write!(f, "NoKey")?,
+            (0, Some(Key(v))) => write!(f, "{:?}", v)?,
+            (1, Some(Key(v))) => write!(f, "Only.{:?}", v)?,
+            (2, Some(Key(v))) => write!(f, "Not.{:?}", v)?,
+            _ => write!(f, "UnexpectedKey")?,
         }
-        match self.controller_btn {
-            Some((id, btn)) => write!(f, " ControllerBtn{btn}({id})")?,
-            None => (),
+        match (self.controller_btn_option, &self.controller_btn) {
+            (0, None) => write!(f, " SkipCbt")?,
+            (1, None) => write!(f, " AnyCbt")?,
+            (2, None) => write!(f, " NoCbt")?,
+            (0, Some((id, btn))) => write!(f, "Cbt{btn}({id})")?,
+            (1, Some((id, btn))) => write!(f, "Only.Cbt{btn}({id})")?,
+            (2, Some((id, btn))) => write!(f, "Not.Cbt{btn}({id})")?,
+            _ => write!(f, "UnexpectedCbt")?,
         }
         Ok(())
     }

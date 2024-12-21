@@ -10,3 +10,6 @@ rdev = { version = "0.5.3", features = ["serialize"] }
 
 serde = { version = "1.0.216", features = ["derive"] }
 serde_yml = "0.0.12"
+
+log = "0.4.22"
+env_logger = "0.11.6"
