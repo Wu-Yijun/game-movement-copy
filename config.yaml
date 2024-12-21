@@ -22,6 +22,21 @@ config:
     mouse_m_button: null
     trigger_l: null
     trigger_r: null
+  append_record: !Contains
+  - key_option: 0
+    key: Return
+    controller_btn_option: 0
+    controller_btn: null
+    ctrl: true
+    alt: false
+    shift: true
+    tab: false
+    windows: false
+    mouse_l_button: null
+    mouse_r_button: null
+    mouse_m_button: null
+    trigger_l: null
+    trigger_r: null
   stop_record: !Contains
   - key_option: 0
     key: Escape
@@ -164,481 +179,845 @@ init_state:
     - - 0.0
       - 0.0
 records:
-- ms: 5950.2989
-  pressed: []
-  released: []
-  moves: []
-- ms: 5997.891100000001
+- ms: 55.70550000000003
   pressed:
-  - !Keyboard Alt
+  - !Keyboard Return
   released: []
   moves: []
-- ms: 6093.6523
-  pressed:
-  - !Keyboard Tab
-  released: []
-  moves: []
-- ms: 6461.7108
+- ms: 191.72850000000017
   pressed: []
   released:
-  - !Keyboard Tab
+  - !Keyboard Return
   moves: []
-- ms: 6469.709199999999
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 662.0
-    - 314.0
-- ms: 6477.8192
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 674.0
-    - 321.0
-- ms: 6485.714
-  pressed:
-  - !Keyboard Tab
-  released: []
-  moves:
-  - !Mouse
-    - 692.0
-    - 334.0
-- ms: 6493.6915
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 714.0
-    - 346.0
-- ms: 6501.6959
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 742.0
-    - 364.0
-- ms: 6509.6905
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 767.0
-    - 381.0
-- ms: 6517.6949
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 792.0
-    - 399.0
-- ms: 6525.6948999999995
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 817.0
-    - 419.0
-- ms: 6533.6938
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 849.0
-    - 441.0
-- ms: 6541.6893
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 879.0
-    - 461.0
-- ms: 6549.7027
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 909.0
-    - 484.0
-- ms: 6557.6914
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 934.0
-    - 501.0
-- ms: 6565.6381
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 959.0
-    - 521.0
-- ms: 6573.689899999999
+- ms: 1631.7856999999995
   pressed: []
   released:
-  - !Keyboard Tab
-  moves:
-  - !Mouse
-    - 982.0
-    - 539.0
-- ms: 6581.6983
+  - !Keyboard ShiftLeft
+  moves: []
+- ms: 1639.7643999999991
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 999.0
-    - 554.0
-- ms: 6589.6928
+    - 1567.0
+    - 670.0
+- ms: 1647.7793999999994
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 1017.0
-    - 564.0
-- ms: 6597.9773000000005
+    - 1540.0
+    - 675.0
+- ms: 1655.7565999999997
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 1032.0
-    - 579.0
-- ms: 6605.6545
+    - 1500.0
+    - 680.0
+- ms: 1663.7668999999996
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 1047.0
-    - 584.0
-- ms: 6613.6885
-  pressed: []
-  released:
-  - !Keyboard Alt
-  moves:
-  - !Mouse
-    - 1057.0
-    - 594.0
-- ms: 6621.7173999999995
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1072.0
-    - 599.0
-- ms: 6629.703100000001
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1082.0
-    - 604.0
-- ms: 6637.705000000001
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1097.0
-    - 609.0
-- ms: 6645.7041
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1114.0
-    - 611.0
-- ms: 6653.706
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1129.0
-    - 619.0
-- ms: 6661.6868
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1139.0
-    - 621.0
-- ms: 6669.7515
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1152.0
-    - 629.0
-- ms: 6677.6988
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1167.0
-    - 634.0
-- ms: 6685.7087
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1177.0
-    - 639.0
-- ms: 6693.6853
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1187.0
-    - 644.0
-- ms: 6701.7075
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1192.0
-    - 649.0
-- ms: 6709.686599999999
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1199.0
-    - 651.0
-- ms: 6717.7089
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1207.0
-    - 654.0
-- ms: 6725.6889
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1217.0
-    - 654.0
-- ms: 6733.6944
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1227.0
-    - 659.0
-- ms: 6741.6865
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1244.0
-    - 664.0
-- ms: 6749.6941
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1267.0
-    - 669.0
-- ms: 6757.686900000001
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1292.0
-    - 679.0
-- ms: 6765.6931
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1322.0
-    - 684.0
-- ms: 6773.687599999999
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1349.0
-    - 694.0
-- ms: 6781.6948999999995
-  pressed: []
-  released: []
-  moves:
-  - !Mouse
-    - 1372.0
-    - 699.0
-- ms: 6789.6905
+    - 1452.0
+    - 685.0
+- ms: 1671.8419999999996
   pressed: []
   released: []
   moves:
   - !Mouse
     - 1397.0
-    - 709.0
-- ms: 6797.6873
+    - 685.0
+- ms: 1679.7596999999996
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1352.0
+    - 685.0
+- ms: 1687.7583999999997
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1322.0
+    - 685.0
+- ms: 1735.7649999999994
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1317.0
+    - 685.0
+- ms: 1743.7519000000002
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1324.0
+    - 685.0
+- ms: 1751.7583999999997
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1349.0
+    - 685.0
+- ms: 1759.7519000000002
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1372.0
+    - 685.0
+- ms: 1767.7734
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1394.0
+    - 685.0
+- ms: 1775.7545999999993
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1409.0
+    - 685.0
+- ms: 1959.8252000000002
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1422.0
+    - 685.0
+- ms: 1967.7655999999997
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1424.0
+    - 697.0
+- ms: 1975.7644
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1422.0
+    - 710.0
+- ms: 1983.7765
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1405.0
+    - 722.0
+- ms: 1991.7612
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1382.0
+    - 735.0
+- ms: 1999.7632000000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1347.0
+    - 735.0
+- ms: 2007.7632000000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1307.0
+    - 735.0
+- ms: 2015.7696999999998
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1270.0
+    - 735.0
+- ms: 2023.7788999999993
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1235.0
+    - 718.0
+- ms: 2031.7727999999997
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1215.0
+    - 705.0
+- ms: 2039.7195000000002
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1200.0
+    - 695.0
+- ms: 2047.7579999999998
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1200.0
+    - 688.0
+- ms: 2055.731599999999
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1200.0
+    - 678.0
+- ms: 2063.7309999999998
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1200.0
+    - 663.0
+- ms: 2071.7309000000005
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1200.0
+    - 653.0
+- ms: 2079.7216
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1212.0
+    - 635.0
+- ms: 2087.7179000000006
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1229.0
+    - 628.0
+- ms: 2095.7115000000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1252.0
+    - 620.0
+- ms: 2103.7136
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1282.0
+    - 615.0
+- ms: 2111.7086
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1317.0
+    - 615.0
+- ms: 2119.7155999999995
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1347.0
+    - 615.0
+- ms: 2127.7159
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1377.0
+    - 615.0
+- ms: 2135.7493999999997
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1399.0
+    - 627.0
+- ms: 2143.7744999999995
   pressed: []
   released: []
   moves:
   - !Mouse
     - 1412.0
-    - 714.0
-- ms: 6805.6967
+    - 640.0
+- ms: 2151.7691999999997
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 1427.0
-    - 719.0
-- ms: 6813.6842
+    - 1419.0
+    - 650.0
+- ms: 2159.7551999999996
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 1432.0
-    - 724.0
-- ms: 6821.6985
+    - 1419.0
+    - 657.0
+- ms: 2167.7690999999995
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1419.0
+    - 672.0
+- ms: 2175.7551999999996
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1419.0
+    - 682.0
+- ms: 2183.7695999999996
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1419.0
+    - 687.0
+- ms: 2191.757199999999
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1417.0
+    - 695.0
+- ms: 2199.7684
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1407.0
+    - 700.0
+- ms: 2207.7582999999995
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1402.0
+    - 700.0
+- ms: 3216.197
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1397.0
+    - 700.0
+- ms: 3287.8729999999996
+  pressed:
+  - !Keyboard Return
+  released: []
+  moves: []
+- ms: 3367.874799999998
+  pressed: []
+  released:
+  - !Keyboard Return
+  moves: []
+- ms: 3391.8914000000004
+  pressed: []
+  released:
+  - !Keyboard ShiftLeft
+  moves: []
+- ms: 3695.9964000000036
+  pressed: []
+  released:
+  - !Keyboard ControlLeft
+  moves: []
+- ms: 3703.9809999999998
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1550.0
+    - 735.0
+- ms: 3712.0117000000027
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1517.0
+    - 735.0
+- ms: 3719.991399999999
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1467.0
+    - 735.0
+- ms: 3727.9628999999986
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1410.0
+    - 735.0
+- ms: 3735.9528000000064
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1355.0
+    - 735.0
+- ms: 3743.953300000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1322.0
+    - 730.0
+- ms: 3751.941700000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1307.0
+    - 720.0
+- ms: 3759.9562000000005
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1305.0
+    - 713.0
+- ms: 3767.941500000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1305.0
+    - 705.0
+- ms: 3775.9441000000006
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1305.0
+    - 693.0
+- ms: 3783.944000000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1305.0
+    - 678.0
+- ms: 3791.9473
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1300.0
+    - 658.0
+- ms: 3799.9446000000025
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1290.0
+    - 633.0
+- ms: 3807.9437000000034
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1280.0
+    - 608.0
+- ms: 3815.9432000000015
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1280.0
+    - 583.0
+- ms: 3823.9448000000048
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1270.0
+    - 553.0
+- ms: 3831.9444000000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1265.0
+    - 523.0
+- ms: 3839.940800000004
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1265.0
+    - 490.0
+- ms: 3847.943099999997
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1265.0
+    - 460.0
+- ms: 3855.937300000005
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1265.0
+    - 428.0
+- ms: 3863.947500000002
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1265.0
+    - 398.0
+- ms: 3871.9380999999994
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1274.0
+    - 373.0
+- ms: 3879.944199999998
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1284.0
+    - 343.0
+- ms: 3887.9381000000067
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1292.0
+    - 320.0
+- ms: 3895.953999999998
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1304.0
+    - 308.0
+- ms: 3903.948000000004
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1319.0
+    - 298.0
+- ms: 3911.9423000000024
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1342.0
+    - 290.0
+- ms: 3919.9424
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1367.0
+    - 290.0
+- ms: 3927.9456999999966
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1399.0
+    - 297.0
+- ms: 3935.944199999998
   pressed: []
   released: []
   moves:
   - !Mouse
     - 1437.0
-    - 724.0
-- ms: 6997.8893
+    - 320.0
+- ms: 3943.9478000000017
   pressed: []
   released: []
   moves:
   - !Mouse
-    - 1439.0
-    - 726.0
-- ms: 7093.818899999999
-  pressed:
-  - !MouseButton 0
-  released: []
-  moves: []
-- ms: 7813.908299999999
+    - 1477.0
+    - 345.0
+- ms: 3951.9434000000037
   pressed: []
-  released:
-  - !MouseButton 0
-  moves: []
-- ms: 7893.660699999999
+  released: []
+  moves:
+  - !Mouse
+    - 1509.0
+    - 372.0
+- ms: 3959.9465999999957
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1542.0
+    - 415.0
+- ms: 3967.951500000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1564.0
+    - 450.0
+- ms: 3975.9442000000054
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1584.0
+    - 492.0
+- ms: 3983.9853000000076
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1604.0
+    - 535.0
+- ms: 3991.950300000004
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1624.0
+    - 577.0
+- ms: 3999.941500000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1639.0
+    - 617.0
+- ms: 4007.943500000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1659.0
+    - 662.0
+- ms: 4015.940999999999
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1669.0
+    - 702.0
+- ms: 4023.942700000007
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1674.0
+    - 737.0
+- ms: 4031.941300000006
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1670.0
+    - 762.0
+- ms: 4039.9811000000045
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1650.0
+    - 792.0
+- ms: 4047.9470000000074
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1620.0
+    - 815.0
+- ms: 4055.9388000000035
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1582.0
+    - 835.0
+- ms: 4063.942900000002
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1540.0
+    - 845.0
+- ms: 4071.9407000000065
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1487.0
+    - 855.0
+- ms: 4079.9430000000066
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1432.0
+    - 855.0
+- ms: 4087.9401
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1367.0
+    - 855.0
+- ms: 4095.943800000008
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1302.0
+    - 845.0
+- ms: 4103.938799999996
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1237.0
+    - 825.0
+- ms: 4111.950799999999
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1170.0
+    - 805.0
+- ms: 4119.943299999999
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1110.0
+    - 780.0
+- ms: 4127.954300000005
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1055.0
+    - 750.0
+- ms: 4135.9783000000025
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 1010.0
+    - 718.0
+- ms: 4143.950700000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 982.0
+    - 693.0
+- ms: 4151.9447999999975
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 970.0
+    - 673.0
+- ms: 4159.9505999999965
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 970.0
+    - 658.0
+- ms: 4167.945800000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 970.0
+    - 643.0
+- ms: 4175.951000000001
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 970.0
+    - 633.0
+- ms: 4183.9421
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 970.0
+    - 625.0
+- ms: 4191.951800000003
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 970.0
+    - 623.0
+- ms: 4199.9424
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 977.0
+    - 615.0
+- ms: 4207.950000000004
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 979.0
+    - 615.0
+- ms: 5576.603700000007
+  pressed: []
+  released: []
+  moves:
+  - !Mouse
+    - 982.0
+    - 615.0
+- ms: 5656.325200000007
   pressed:
   - !Keyboard Return
   released: []
   moves: []
-- ms: 8934.274
+- ms: 5784.307400000005
   pressed: []
   released:
   - !Keyboard Return
   moves: []
-- ms: 9149.917
+- ms: 7312.574900000014
+  pressed: []
+  released:
+  - !Keyboard ControlLeft
+  - !Keyboard ShiftLeft
+  moves: []
+- ms: 7360.5030000000115
   pressed:
   - !Keyboard ControlLeft
   released: []
   moves: []
-- ms: 9197.6735
-  pressed:
-  - !Keyboard Return
-  released: []
-  moves: []
-- ms: 9493.6894
-  pressed: []
-  released:
-  - !Keyboard Return
-  moves: []
-- ms: 11534.3514
-  pressed: []
-  released:
-  - !Keyboard ControlLeft
-  moves: []
-- ms: 11701.652
-  pressed:
-  - !Keyboard ControlLeft
-  released: []
-  moves: []
-- ms: 12597.897500000001
-  pressed: []
-  released:
-  - !Keyboard ControlLeft
-  moves: []
-- ms: 12669.6116
-  pressed:
-  - !Keyboard Return
-  released: []
-  moves: []
-- ms: 16110.3532
-  pressed: []
-  released:
-  - !Keyboard Return
-  moves: []
-- ms: 16189.6178
-  pressed:
-  - !Keyboard Escape
-  released: []
-  moves: []
-- ms: 19710.2834
-  pressed: []
-  released:
-  - !Keyboard Escape
-  moves: []
-- ms: 19821.8658
+- ms: 7424.479700000011
   pressed:
   - !Keyboard ShiftLeft
   released: []
   moves: []
-- ms: 19877.6416
-  pressed:
-  - !Keyboard Return
-  released: []
-  moves: []
-- ms: 20005.642300000003
-  pressed: []
-  released:
-  - !Keyboard Return
-  moves: []
-- ms: 22158.175499999998
-  pressed: []
-  released:
-  - !Keyboard ShiftLeft
-  moves: []
-- ms: 22230.1261
-  pressed:
-  - !Keyboard ShiftLeft
-  released: []
-  moves: []
-- ms: 22309.6063
-  pressed:
-  - !Keyboard Escape
-  released: []
-  moves: []
-- ms: 22357.6058
-  pressed: []
-  released:
-  - !Keyboard Escape
-  moves: []
-- ms: 24805.796000000002
-  pressed: []
-  released:
-  - !Keyboard ShiftLeft
-  moves: []
-- ms: 24885.617700000003
-  pressed:
-  - !Keyboard Return
-  released: []
-  moves: []
-- ms: 26654.2442
-  pressed: []
-  released:
-  - !Keyboard Return
-  moves: []
-- ms: 26726.053799999998
-  pressed:
-  - !Keyboard ControlLeft
-  released: []
-  moves: []
-- ms: 26829.6801
-  pressed:
-  - !Keyboard ShiftLeft
-  released: []
-  moves: []
-- ms: 26934.315300000002
+- ms: 7664.831000000006
   pressed:
   - !MouseButton 1
   released: []

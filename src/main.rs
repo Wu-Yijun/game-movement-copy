@@ -1,4 +1,5 @@
 mod recorder;
+mod player;
 mod state;
 
 use std::{thread, time};
@@ -53,11 +54,16 @@ fn run_vigem() {
 
 #[cfg(windows)]
 fn main() {
-    // env_logger::init();
+    env_logger::builder()
+        .target(env_logger::Target::Stdout)
+        // .filter_level(log::LevelFilter::Warn)
+        .filter_level(log::LevelFilter::Info)
+        // .filter_level(log::LevelFilter::Debug)
+        .init();
     // log::warn!("This info message will always be shown"); 
     // return;
     let mut record = Recorder::from_file("config.yaml".to_string());
-    println!("{:#?}", record);
+    // println!("{:#?}", record);
     record.save_to_file("config.yaml".to_string());
     record.init();
     while record.is_ok() {

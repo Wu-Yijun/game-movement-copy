@@ -1,9 +1,7 @@
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-};
+use core::time;
+use std::fmt::Debug;
 
 use crate::recorder::RecordEntry;
 
@@ -39,6 +37,8 @@ pub struct GlobalState {
     rec_released: Vec<AnyKey>,
     #[serde(skip)]
     rec_moves: Vec<AnyOffset>,
+    #[serde(skip)]
+    rec_start_ms: f64,
 }
 
 impl From<rdev::Key> for AnyKey {
@@ -90,7 +90,7 @@ impl GlobalState {
         let released = std::mem::replace(&mut self.rec_released, Vec::new());
         let moves = std::mem::replace(&mut self.rec_moves, Vec::new());
         let res = RecordEntry {
-            ms,
+            ms: ms - self.rec_start_ms,
             pressed,
             released,
             moves,
@@ -257,6 +257,10 @@ impl GlobalState {
             }
         }
     }
+
+    pub fn start_rec(&mut self, time_offset: f64) {
+        self.rec_start_ms = self.time_ms - time_offset;
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -310,6 +314,22 @@ impl ShortCut {
         key: Some(Key(rdev::Key::Return)),
         controller_btn: None,
         ctrl: Some(false),
+        alt: Some(false),
+        shift: Some(true),
+        tab: Some(false),
+        windows: Some(false),
+        mouse_l_button: None,
+        mouse_r_button: None,
+        mouse_m_button: None,
+        trigger_l: None,
+        trigger_r: None,
+    };
+    pub const CTRL_SHIFT_ENTER: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
+        key: Some(Key(rdev::Key::Return)),
+        controller_btn: None,
+        ctrl: Some(true),
         alt: Some(false),
         shift: Some(true),
         tab: Some(false),
