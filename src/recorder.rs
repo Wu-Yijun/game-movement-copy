@@ -1,11 +1,9 @@
-use std::{sync::mpsc::Receiver, thread::JoinHandle};
-
-use log::{debug, info, warn};
-
-use crate::{
-    player::RecordPlayer,
-    state::{AnyKey, AnyOffset, ControllerEvent, ControllerRaw, GlobalState, ShortCut, ShortCuts},
+use crate::player::RecordPlayer;
+use crate::state::{
+    AnyKey, AnyOffset, ControllerEvent, ControllerRaw, GlobalState, ShortCut, ShortCuts,
 };
+use log::{debug, info, warn};
+use std::{sync::mpsc::Receiver, thread::JoinHandle};
 
 use rusty_xinput::XInputHandle;
 use serde::{Deserialize, Serialize};
@@ -16,6 +14,8 @@ pub struct Config {
     pub enable_mouse: bool,
     pub enable_keyboard: bool,
     pub enable_controller: [bool; 4],
+
+    pub screen_scale: f64,
 
     pub start_record: ShortCuts,
     pub append_record: ShortCuts,
@@ -35,6 +35,8 @@ impl Default for Config {
             enable_mouse: true,
             enable_keyboard: true,
             enable_controller: [true, false, false, false],
+
+            screen_scale: 1.0,
 
             start_record: ShortCuts::Contains(vec![]),
             append_record: ShortCuts::Contains(vec![]),
@@ -59,14 +61,20 @@ impl Config {
     /// - `Shift + Escape` to drop the current recording, and to remain the last recording unchanged
     pub fn new() -> Self {
         Self {
-            start_record: ShortCuts::Contains(vec![ShortCut::SHIFT_ENTER]),
-            append_record: ShortCuts::Contains(vec![ShortCut::CTRL_SHIFT_ENTER]),
-            stop_record: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
+            start_record: ShortCuts::Contains(vec![ShortCut::alt(rdev::Key::Num1)]),
+            append_record: ShortCuts::Contains(vec![ShortCut::ctrl_alt(rdev::Key::Num1)]),
+            stop_record: ShortCuts::Contains(vec![ShortCut::shift_alt(rdev::Key::Num1)]),
             drop_record: ShortCuts::Contains(vec![ShortCut::SHIFT_ESCAPE]),
-            start_playback: ShortCuts::Contains(vec![ShortCut::CTRL_ENTER]),
-            stop_playback: ShortCuts::Contains(vec![ShortCut::ESCAPE]),
-            continue_record: ShortCuts::Exclude(vec![ShortCut::EMPTY, ShortCut::ESCAPE]),
-
+            start_playback: ShortCuts::Contains(vec![ShortCut::alt(rdev::Key::Num2)]),
+            stop_playback: ShortCuts::Contains(vec![
+                ShortCut::SHIFT_ESCAPE,
+                ShortCut::shift_alt(rdev::Key::Num2),
+            ]),
+            continue_record: ShortCuts::Contains(vec![
+                ShortCut::ESCAPE,
+                ShortCut::key(rdev::Key::Space),
+            ]),
+            // continue_record: ShortCuts::Exclude(vec![ShortCut::EMPTY, ShortCut::ESCAPE]),
             save_records: ShortCuts::Contains(vec![ShortCut::CTRL_RIGHT_S]),
             ..Default::default()
         }
@@ -92,7 +100,7 @@ pub enum RecorderState {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Recorder {
     config: Config,
-    init_state: GlobalState,
+    // init_state: GlobalState,
     records: Vec<RecordEntry>,
 
     #[serde(skip)]
@@ -103,6 +111,8 @@ pub struct Recorder {
     #[serde(skip)]
     /// rec start pos, old length, rec length
     rec_pos: (usize, usize, usize),
+    #[serde(skip)]
+    rec_should_update: bool,
     #[serde(skip)]
     rdev_thread: Option<JoinHandle<()>>,
     #[serde(skip)]
@@ -117,11 +127,12 @@ impl Default for Recorder {
     fn default() -> Self {
         Self {
             config: Config::new(),
-            init_state: Default::default(),
+            // init_state: Default::default(),
             records: Vec::new(),
             player: RecordPlayer::new(),
             recorder: Default::default(),
             rec_pos: (0, 0, 0),
+            rec_should_update: false,
             rdev_thread: None,
             controller_thread: None,
             recv: None,
@@ -260,7 +271,7 @@ impl Recorder {
         match r.recv() {
             Ok(CallbackType::MK(ms, ev, s)) => {
                 info!("MK:ms={:.2}\ts={:?}\t{:?}", ms, s, ev);
-                if ms > self.recorder.time_ms + 1.0 {
+                if ms > self.recorder.time_ms + 1.0 || self.rec_should_update {
                     self.next_ms(ms);
                 }
                 match ev {
@@ -268,9 +279,10 @@ impl Recorder {
                     rdev::EventType::KeyRelease(key) => self.recorder.key_up(key.into()),
                     rdev::EventType::ButtonPress(button) => self.recorder.key_down(button.into()),
                     rdev::EventType::ButtonRelease(button) => self.recorder.key_up(button.into()),
-                    rdev::EventType::MouseMove { x, y } => {
-                        self.recorder.moves(AnyOffset::Mouse(x, y))
-                    }
+                    rdev::EventType::MouseMove { x, y } => self.recorder.moves(AnyOffset::Mouse(
+                        x / self.config.screen_scale,
+                        y / self.config.screen_scale,
+                    )),
                     rdev::EventType::Wheel {
                         delta_x: x,
                         delta_y: y,
@@ -284,6 +296,8 @@ impl Recorder {
                 }
                 match ev {
                     ControllerEvent::ButtonPress(index) => {
+                        // mouse should not press and release the same time
+                        self.rec_should_update = true;
                         self.recorder.key_down((id, index).into())
                     }
                     ControllerEvent::ButtonRelease(index) => {
@@ -309,15 +323,24 @@ impl Recorder {
     }
 
     fn next_ms(&mut self, ms: f64) {
+        self.rec_should_update = false;
         let e = self.recorder.next_ms(ms);
         if self.state == RecorderState::Recording {
             self.records.push(e);
         }
     }
+    fn clear_this(&mut self) {
+        self.rec_should_update = false;
+        self.records.pop();
+        self.recorder.clear_this();
+    }
 
     pub fn match_shortcuts(&mut self) -> RecorderState {
         let pat = self.recorder.get_pattern();
-        debug!("Pattern: {:?}", pat);
+        debug!(
+            "Pattern: {:?}({}+{})",
+            pat, pat.key_option, pat.controller_btn_option
+        );
         debug!("Pressed: {:?}", self.recorder.pressed_keys);
         if self
             .recorder
@@ -332,17 +355,20 @@ impl Recorder {
                     .match_shortcuts(&pat, &self.config.append_record)
                 {
                     info!("Append Rec.");
+                    self.clear_this();
                     self.start_record(self.records.len())
                 } else if self
                     .recorder
                     .match_shortcuts(&pat, &self.config.start_record)
                 {
                     info!("New Rec.");
+                    self.clear_this();
                     self.start_record(0)
                 } else if self
                     .recorder
                     .match_shortcuts(&pat, &self.config.start_playback)
                 {
+                    self.clear_this();
                     self.start_playback()
                 }
             }
@@ -351,27 +377,36 @@ impl Recorder {
                     .recorder
                     .match_shortcuts(&pat, &self.config.drop_record)
                 {
+                    self.clear_this();
                     self.stop_record(true)
                 } else if self
                     .recorder
                     .match_shortcuts(&pat, &self.config.stop_record)
                 {
+                    self.clear_this();
                     self.stop_record(false)
                 }
             }
             RecorderState::Playing => {
                 if self.player.is_done() {
+                    warn!("Player is done.");
+                    self.clear_this();
                     self.stop_playback();
                 } else if self
                     .recorder
                     .match_shortcuts(&pat, &self.config.continue_record)
                 {
-                    self.start_record(self.player.get_progress());
+                    warn!("Stop play for recording.");
+                    self.clear_this();
+                    let pos = self.player.get_progress();
                     self.stop_playback();
+                    self.start_record(pos);
                 } else if self
                     .recorder
                     .match_shortcuts(&pat, &self.config.stop_playback)
                 {
+                    self.clear_this();
+                    warn!("{:?}", self.recorder.pressed_keys);
                     self.stop_playback();
                 }
             }
@@ -392,12 +427,14 @@ impl Recorder {
             self.rec_pos = (continue_at, self.records.len(), 0);
             self.recorder.start_rec(self.records[continue_at - 1].ms);
         }
+        warn!("Recorder pos: {:?}", self.rec_pos);
         info!("Recorder pos: {:?}", self.rec_pos);
         self.state = RecorderState::Recording;
     }
     fn stop_record(&mut self, discard_records: bool) {
         warn!("Stop Recording!!! Discard:{}", discard_records);
         let mut rec = self.records.split_off(self.rec_pos.1);
+        warn!("Recorder pos: {:?}", self.rec_pos);
         info!("Records length: {}", rec.len());
         if !discard_records {
             if self.rec_pos.0 == 0 {
@@ -419,6 +456,7 @@ impl Recorder {
     fn stop_playback(&mut self) {
         warn!("Stop Playback!!!");
         self.player.stop_playback();
+        self.player.set_progress(0);
         self.state = RecorderState::Ready;
     }
 }
@@ -454,13 +492,32 @@ fn test_shortcuts() {
         .filter_level(log::LevelFilter::Trace)
         .is_test(true)
         .init();
-    let mut record = Recorder::from_file("".to_string());
-    // record.state = RecorderState::Ready;
-    // record.current.pressed_keys.push(rdev::Key::Return.into());
-    // record.match_shortcuts();
-    record.state = RecorderState::Playing;
-    record.recorder.pressed_keys.push(rdev::Key::UpArrow.into());
+    let mut record = Recorder::from_file("test.yaml".to_string());
+    record.state = RecorderState::Ready;
+    record
+        .recorder
+        .pressed_keys
+        .push(rdev::Key::ShiftLeft.into());
+    record.recorder.pressed_keys.push(rdev::Key::Return.into());
     record.match_shortcuts();
+    record.recorder.pressed_keys.pop();
+    record.match_shortcuts();
+    record.recorder.pressed_keys.pop();
+    record.match_shortcuts();
+    record.recorder.pressed_keys.push(rdev::Key::Escape.into());
+    record.match_shortcuts();
+
+    // record.save_to_file("test.yaml".to_string());
+
+    // record.recorder.pressed_keys.push(rdev::Key::ShiftLeft.into());
+    // record.recorder.pressed_keys.push(rdev::Key::Return.into());
+    // record.match_shortcuts();
+    // record.recorder.pressed_keys.pop();
+    // record.match_shortcuts();
+    // record.recorder.pressed_keys.pop();
+    // record.match_shortcuts();
+    // record.recorder.pressed_keys.push(rdev::Key::Escape.into());
+    // record.match_shortcuts();
 
     // panic!()
 }
@@ -483,6 +540,11 @@ fn test_player() {
         .push(rdev::Key::ControlLeft.into());
     record.recorder.pressed_keys.push(rdev::Key::Return.into());
     record.match_shortcuts();
+    record.recorder.pressed_keys.pop();
+    record.match_shortcuts();
+    record.recorder.pressed_keys.pop();
+    record.match_shortcuts();
 
     std::thread::sleep(std::time::Duration::from_secs(2));
+    record.match_shortcuts();
 }

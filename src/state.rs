@@ -1,29 +1,7 @@
+use crate::recorder::RecordEntry;
 use log::debug;
 use serde::{Deserialize, Serialize};
-use core::time;
 use std::fmt::Debug;
-
-use crate::recorder::RecordEntry;
-
-// struct InputState {
-//     time_ms: f64,
-//     mouse: MouseState,
-//     keyboard: KeyboardState,
-//     gamepad: HashMap<u32, ControllerState>,
-// }
-// struct MouseState {
-//     pos: [f64; 2],
-//     buttons: [bool; 3],
-//     wheel: [f64; 2],
-// }
-// struct KeyboardState {
-//     keys: HashSet<Key>,
-// }
-// struct ControllerState {
-//     buttons: [bool; 16],
-//     triggers: [f64; 2],
-//     sticks: [[f64; 2]; 2],
-// }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct GlobalState {
@@ -97,6 +75,11 @@ impl GlobalState {
         };
         self.time_ms = ms;
         res
+    }
+    pub fn clear_this(&mut self) {
+        self.rec_pressed.clear();
+        self.rec_released.clear();
+        self.rec_moves.clear();
     }
 
     /// get modifiers pattern of current state.
@@ -266,6 +249,14 @@ impl GlobalState {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 // struct Key(u32);
 pub struct Key(rdev::Key);
+impl Key {
+    pub fn press(&self) -> rdev::EventType {
+        rdev::EventType::KeyPress(self.0.clone())
+    }
+    pub fn release(&self) -> rdev::EventType {
+        rdev::EventType::KeyRelease(self.0.clone())
+    }
+}
 
 #[derive(Serialize, Deserialize, PartialEq)]
 pub struct ShortCut {
@@ -307,6 +298,8 @@ pub enum ShortCuts {
     Exclude(Vec<ShortCut>),
 }
 
+#[allow(unused)]
+/// this is implement of basic keybindings
 impl ShortCut {
     pub const SHIFT_ENTER: Self = Self {
         key_option: 0,
@@ -364,6 +357,22 @@ impl ShortCut {
         ctrl: Some(false),
         alt: Some(false),
         shift: Some(true),
+        tab: Some(false),
+        windows: Some(false),
+        mouse_l_button: None,
+        mouse_r_button: None,
+        mouse_m_button: None,
+        trigger_l: None,
+        trigger_r: None,
+    };
+    pub const CTRL_ESCAPE: Self = Self {
+        key_option: 0,
+        controller_btn_option: 0,
+        key: Some(Key(rdev::Key::Escape)),
+        controller_btn: None,
+        ctrl: Some(true),
+        alt: Some(false),
+        shift: Some(false),
         tab: Some(false),
         windows: Some(false),
         mouse_l_button: None,
@@ -456,6 +465,79 @@ impl ShortCut {
         trigger_l: None,
         trigger_r: None,
     };
+
+    pub fn key(key: rdev::Key) -> Self {
+        Self {
+            key_option: 0,
+            controller_btn_option: 0,
+            key: Some(Key(key)),
+            controller_btn: None,
+            ctrl: Some(false),
+            alt: Some(false),
+            shift: Some(false),
+            tab: Some(false),
+            windows: Some(false),
+            mouse_l_button: Some(false),
+            mouse_r_button: Some(false),
+            mouse_m_button: Some(false),
+            trigger_l: None,
+            trigger_r: None,
+        }
+    }
+    pub fn alt(key: rdev::Key) -> Self {
+        Self {
+            key_option: 0,
+            controller_btn_option: 0,
+            key: Some(Key(key)),
+            controller_btn: None,
+            ctrl: Some(false),
+            alt: Some(true),
+            shift: Some(false),
+            tab: Some(false),
+            windows: Some(false),
+            mouse_l_button: Some(false),
+            mouse_r_button: Some(false),
+            mouse_m_button: Some(false),
+            trigger_l: None,
+            trigger_r: None,
+        }
+    }
+    pub fn ctrl_alt(key: rdev::Key) -> Self {
+        Self {
+            key_option: 0,
+            controller_btn_option: 0,
+            key: Some(Key(key)),
+            controller_btn: None,
+            ctrl: Some(true),
+            alt: Some(true),
+            shift: Some(false),
+            tab: Some(false),
+            windows: Some(false),
+            mouse_l_button: Some(false),
+            mouse_r_button: Some(false),
+            mouse_m_button: Some(false),
+            trigger_l: None,
+            trigger_r: None,
+        }
+    }
+    pub fn shift_alt(key: rdev::Key) -> Self {
+        Self {
+            key_option: 0,
+            controller_btn_option: 0,
+            key: Some(Key(key)),
+            controller_btn: None,
+            ctrl: Some(false),
+            alt: Some(true),
+            shift: Some(true),
+            tab: Some(false),
+            windows: Some(false),
+            mouse_l_button: Some(false),
+            mouse_r_button: Some(false),
+            mouse_m_button: Some(false),
+            trigger_l: None,
+            trigger_r: None,
+        }
+    }
 }
 
 impl Debug for ShortCut {
